@@ -1,75 +1,52 @@
-# Publishes this n8n community node package to npm on every version tag push.
+# Publica este paquete de nodos de n8n en npm cada vez que se empuja un tag de versión.
 #
-# Starting May 1 2026, n8n requires all community nodes to be published via
-# GitHub Actions with npm provenance statements. This workflow satisfies that
-# requirement. Provenance lets anyone cryptographically verify that a package
-# was built by this exact workflow, from this exact repository and commit.
+# n8n exige (desde el 1 de mayo de 2026) que los nodos de la comunidad se publiquen
+# desde GitHub Actions con «provenance» de npm. Este flujo lo cumple.
 #
-# ─── PREREQUISITES ─────────────────────────────────────────────────────────────
+# ─── CÓMO SE AUTENTICA ─────────────────────────────────────────────────────────
 #
-# @n8n/node-cli ≥ 0.23.0 is required. Earlier versions do not support the
-# provenance flag passed by `npm run release` in CI, and the publish step will
-# fail. Check the version installed in this project with:
+# Sin tokens. npm confía en este repositorio y en este archivo (publish.yml) por
+# «Trusted Publishing» (OIDC): GitHub entrega un token de identidad de corta vida
+# y npm lo acepta. No existe el secreto NPM_TOKEN y no debe volver a crearse.
 #
-#   npm list @n8n/node-cli
+# El Trusted Publisher de npm solo tiene permiso de «npm stage publish»
+# (publicación en espera). Por eso este flujo NO publica directo: deja la versión
+# en espera y el dueño la aprueba con su llave de seguridad en
+# https://www.npmjs.com/package/n8n-nodes-halpii-taxid → pestaña «Staged Packages»
+# → «Approve». Hasta que se aprueba, la versión no aparece en el registro.
 #
-# To upgrade, add @n8n/node-cli@latest as a dev dependency using your package manager.
+# Requisitos del runner (docs.npmjs.com/staged-publishing):
+#   - Node.js 22.14.0 o superior
+#   - npm CLI 11.15.0 o superior (aquí se fija una versión exacta)
 #
-# ─── ONE-TIME SETUP ────────────────────────────────────────────────────────────
+# Nota: `n8n-node release` (npm run release) solo sabe ejecutar `npm publish`,
+# que este Trusted Publisher no permite. Por eso aquí se llama a npm directamente.
+# RELEASE_MODE=true es lo que pide el `prepublishOnly` del paquete (n8n-node prerelease).
 #
-# Option A — OIDC Trusted Publishing (recommended, no long-lived secrets):
-#   1. Log in to npmjs.com and open your package's settings.
-#   2. Under "Publish access" → "Trusted Publishers", click "Add a publisher".
-#   3. Select GitHub Actions and fill in:
-#        Repository owner: <your-github-username-or-org>
-#        Repository name:  <your-repo-name>
-#        Workflow name:    publish.yml
-#        Environment:      (leave blank unless you use GitHub Environments)
-#   4. Leave the NPM_TOKEN secret unset in this repository. GitHub's OIDC
-#      token is used instead — no secret ever touches your repo settings.
+# ─── CÓMO SACAR UNA VERSIÓN ────────────────────────────────────────────────────
 #
-# Option B — npm Automation Token (fallback):
-#   1. On npmjs.com: Access Tokens → Generate New Token → Granular Access Token.
-#      Scope it to this package with "Read and write" publish permission.
-#   2. In GitHub: Settings → Secrets and variables → Actions → New secret.
-#      Name it NPM_TOKEN and paste the token value.
-#
-# Both options work with --provenance. Provenance is signed by GitHub's OIDC
-# infrastructure regardless of how npm authentication is handled.
-#
-# ─── TAG CONVENTION ────────────────────────────────────────────────────────────
-#
-# This workflow triggers on tags matching "*.*.*" (e.g. 0.2.0).
-# If you prefer tags with a "v" prefix (e.g. v0.2.0), change the filter to:
-#   tags: ['v*.*.*']
-#
-# ─── RELEASE PROCESS ───────────────────────────────────────────────────────────
-#
-# Run the following command locally to start an interactive release:
-#
-#   npm run release
-#
-# This will lint, build, prompt for a version bump, update the changelog,
-# commit, tag, and push — which triggers this workflow to publish to npm.
+#   1. Subir la versión en package.json y anotarla en CHANGELOG.md.
+#   2. Commit y push a main.
+#   3. Crear y empujar un tag igual a la versión, sin «v» (por ejemplo 0.1.1).
+#   4. Cuando termine este flujo, aprobar la versión en npmjs.com (ver arriba).
 
 name: Publish
 
 on:
   push:
     tags:
-      # Matches 0.1.0, 1.2.3, 2.0.0-rc.1, etc.
-      # See "TAG CONVENTION" above if you prefer tags with a "v" prefix.
+      # Coincide con 0.1.0, 1.2.3, 2.0.0-rc.1, etc.
       - '*.*.*'
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Publish to npm (staged)
     runs-on: ubuntu-latest
 
     permissions:
-      # Required to mint an OIDC token for npm provenance attestation.
+      # Necesario para el token OIDC (Trusted Publishing y provenance).
       id-token: write
-      # Scoped down from the default (write) for least-privilege publishing.
+      # Mínimo privilegio: solo lectura del código.
       contents: read
 
     steps:
@@ -78,22 +55,37 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: '24'
           cache: 'npm'
+
+      - name: Fijar la versión de npm
+        # Staged publishing necesita npm >= 11.15.0.
+        run: |
+          npm install -g npm@11.21.2
+          node --version
+          npm --version
+
+      - name: Comprobar que el tag coincide con package.json
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "El tag ($GITHUB_REF_NAME) no coincide con la versión de package.json ($VERSION)."
+            exit 1
+          fi
 
       - name: Install dependencies
         run: 'npm ci'
 
-      - name: Release
-        # Publishes to npm with a provenance attestation (requires id-token: write above).
-        # Lint and build run automatically as part of the release process.
-        #
-        # Option A (OIDC): leave NPM_TOKEN unset — the token step is skipped and
-        #   npm uses the OIDC exchange instead.
-        # Option B (token): set NPM_TOKEN in repo secrets — it is written to
-        #   .npmrc here before publishing.
-        run: |
-          [ -n "$NPM_TOKEN" ] && npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
-          npm run release
+      - name: Run lint
+        run: 'npm run lint'
+
+      - name: Run build
+        run: 'npm run build'
+
+      - name: Publicar en espera (staged) con provenance
+        # Autenticación por OIDC: no hay token. La versión queda en espera hasta
+        # que el dueño la apruebe en npmjs.com → Staged Packages.
+        run: 'npm stage publish --provenance --access public'
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_MODE: 'true'
+          NPM_CONFIG_PROVENANCE: 'true'

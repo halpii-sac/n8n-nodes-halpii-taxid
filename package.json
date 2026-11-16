@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-halpii-taxid",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "n8n community node for HALPII Tax ID: validate business tax IDs (Peru RUC, Mexico RFC, Colombia NIT, EU VAT and more) against official registries where available.",
   "license": "MIT",
   "homepage": "https://taxid.halpii.com",
