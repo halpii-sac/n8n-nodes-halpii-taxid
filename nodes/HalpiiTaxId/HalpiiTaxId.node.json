@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-halpii-taxid.halpiiTaxId",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Data & Storage", "Finance & Accounting"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/halpii-sac/n8n-nodes-halpii-taxid?tab=readme-ov-file#credentials"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://taxid.halpii.com/docs"
+			}
+		]
+	}
+}
