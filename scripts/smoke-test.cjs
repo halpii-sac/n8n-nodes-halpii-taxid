@@ -38,17 +38,18 @@ function ctx(params, items = 1, opts = {}) {
 const node = new HalpiiTaxId();
 const summary = (j) => ({ country: j.country, level: j.verification_level, verdict: j.assessment?.verdict, name: j.legal_name ?? j.name ?? null, error: j.error });
 (async () => {
+  // Números ficticios (o el RUC de HALPII): nunca identificadores reales de otras empresas.
   const cases = [
     { resource: 'taxId', operation: 'peruRuc', ruc: '20615614841' },
-    { resource: 'taxId', operation: 'validate', country: 'PE', taxId: '20100047219' },
+    { resource: 'taxId', operation: 'validate', country: 'PE', taxId: '20000000001' },
     { resource: 'taxId', operation: 'validate', country: 'pe', taxId: '201' },
-    { resource: 'taxId', operation: 'validate', country: 'CO', taxId: '860002964-4' },
-    { resource: 'taxId', operation: 'validate', country: 'MX', taxId: 'AAA080808HL8' },
-    { resource: 'taxId', operation: 'validate', country: 'CL', taxId: '61.704.000-K' },
-    { resource: 'taxId', operation: 'validate', country: 'DO', taxId: '101010632' },
-    { resource: 'taxId', operation: 'validate', country: 'NO', taxId: '923609016' },
+    { resource: 'taxId', operation: 'validate', country: 'CO', taxId: '900000000-1' },
+    { resource: 'taxId', operation: 'validate', country: 'MX', taxId: 'XAXX010101000' },
+    { resource: 'taxId', operation: 'validate', country: 'CL', taxId: '11.111.111-1' },
+    { resource: 'taxId', operation: 'validate', country: 'DO', taxId: '100000000' },
+    { resource: 'taxId', operation: 'validate', country: 'NO', taxId: '900000000' },
     { resource: 'taxId', operation: 'validate', country: 'DE', taxId: 'DE123456789', idType: 'VAT' },
-    { resource: 'taxId', operation: 'validate', country: 'AR', taxId: '30500010912' },
+    { resource: 'taxId', operation: 'validate', country: 'AR', taxId: '30000000001' },
   ];
   const out = await node.execute.call(ctx(cases, cases.length));
   out[0].forEach((it, i) => console.log(i, JSON.stringify(cases[i]), '->', JSON.stringify(summary(it.json)), 'paired', it.pairedItem.item));
