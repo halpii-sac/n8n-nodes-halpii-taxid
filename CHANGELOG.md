@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- The **Tax ID** field placeholder is now a fictitious German VAT number (`DE123456789`, which fails the check digit on purpose) instead of a number that could belong to a real company. No functional changes.
+
 ## 0.1.1
 
 - Publicación por trusted publishing; sin cambios funcionales.

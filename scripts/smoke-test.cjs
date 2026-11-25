@@ -47,7 +47,7 @@ const summary = (j) => ({ country: j.country, level: j.verification_level, verdi
     { resource: 'taxId', operation: 'validate', country: 'CL', taxId: '61.704.000-K' },
     { resource: 'taxId', operation: 'validate', country: 'DO', taxId: '101010632' },
     { resource: 'taxId', operation: 'validate', country: 'NO', taxId: '923609016' },
-    { resource: 'taxId', operation: 'validate', country: 'DE', taxId: 'DE143454214', idType: 'VAT' },
+    { resource: 'taxId', operation: 'validate', country: 'DE', taxId: 'DE123456789', idType: 'VAT' },
     { resource: 'taxId', operation: 'validate', country: 'AR', taxId: '30500010912' },
   ];
   const out = await node.execute.call(ctx(cases, cases.length));

@@ -183,7 +183,7 @@ export class HalpiiTaxId implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				placeholder: 'DE143454214',
+				placeholder: 'DE123456789',
 				displayOptions: { show: { resource: ['taxId'], operation: ['validate'] } },
 				description:
 					'The tax ID to check. Spaces, dots and dashes are accepted. EU VAT numbers can include the country prefix.',
