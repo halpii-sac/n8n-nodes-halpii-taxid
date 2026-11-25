@@ -28,7 +28,7 @@ The node can be used as a tool by n8n AI agents (`usableAsTool`).
 2. In n8n, create a credential of type **HALPII Tax ID API** and paste the key into **API Key**.
 3. Click **Test**. n8n calls `GET /v1/usage`, which checks the key without using any of your quota.
 
-The key is sent as `Authorization: Bearer <key>`. Daily allowances and pay-as-you-go pricing are on the [pricing section](https://taxid.halpii.com/#pricing) of the site.
+The key is sent as `Authorization: Bearer <key>`. A no-cost key has 10 trial lookups until you confirm your email; after that it includes 5 lookups a day, renewed every day at 00:00 UTC, with no monthly cap. The Monthly plan and its pricing are on the [pricing section](https://taxid.halpii.com/#pricing) of the site.
 
 ## Usage
 
